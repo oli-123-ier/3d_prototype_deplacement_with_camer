@@ -1,0 +1,64 @@
+[gd_scene format=3 uid="uid://bmw6hxcb71v0c"]
+
+[ext_resource type="ArrayMesh" uid="uid://cft4sh64kx4x6" path="res://models/static_cylinderobj.obj" id="1_4xfga"]
+[ext_resource type="Shader" uid="uid://c6odyn4v34ocr" path="res://scenes/fire_shader_static.tres" id="1_gldc4"]
+[ext_resource type="Texture2D" uid="uid://bpdd64l05m2x4" path="res://Noise Pack/LeLu's Noise Pack/T_Noise_HU85k.png" id="2_gldc4"]
+
+[sub_resource type="Gradient" id="Gradient_2klcf"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_5h11f"]
+gradient = SubResource("Gradient_2klcf")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="Gradient" id="Gradient_2lpho"]
+offsets = PackedFloat32Array(0, 0.115, 0.563, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bx8n8"]
+gradient = SubResource("Gradient_2lpho")
+fill_from = Vector2(1, 0.98805463)
+
+[sub_resource type="Gradient" id="Gradient_0cso3"]
+offsets = PackedFloat32Array(0, 0.223, 0.375, 0.673, 0.923)
+colors = PackedColorArray(0, 0, 0, 0, 0.26, 0.052000012, 0.010400006, 0.2901961, 0.99, 0.28049996, 0, 0.6431373, 1.1787724, 0.8918668, 0.43032283, 0.827451, 1.7461392, 1.1463287, 0.68764985, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_fdhbq"]
+gradient = SubResource("Gradient_0cso3")
+use_hdr = true
+
+[sub_resource type="Gradient" id="Gradient_nakos"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_jh32y"]
+gradient = SubResource("Gradient_nakos")
+fill_from = Vector2(1, 1)
+
+[sub_resource type="Gradient" id="Gradient_be0no"]
+offsets = PackedFloat32Array(0, 0.269, 0.575, 0.649, 0.689, 0.769, 1)
+colors = PackedColorArray(0, 0, 0, 1, 1, 1, 1, 1, 0.023255825, 0.023255825, 0.023255825, 1, 0.019206576, 0.019206576, 0.019206576, 1, 0.017017791, 0.017017791, 0.017017791, 1, 1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_blm8a"]
+gradient = SubResource("Gradient_be0no")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_paxxb"]
+render_priority = 0
+shader = ExtResource("1_gldc4")
+shader_parameter/displacment_speed2 = Vector2(0, 1)
+shader_parameter/displacement_scale2 = Vector2(1, 1)
+shader_parameter/displacment_texture = SubResource("GradientTexture2D_blm8a")
+shader_parameter/displacement_intensity = 0.0
+shader_parameter/speed = Vector2(0, 1)
+shader_parameter/scale = Vector2(2, 1)
+shader_parameter/Texture_base = ExtResource("2_gldc4")
+shader_parameter/Texture_add = SubResource("GradientTexture2D_5h11f")
+shader_parameter/Texture_substract = SubResource("GradientTexture2D_bx8n8")
+shader_parameter/color_pallette = SubResource("GradientTexture1D_fdhbq")
+shader_parameter/disapear_texture = SubResource("GradientTexture2D_jh32y")
+shader_parameter/step = 1.0
+
+[node name="Node3D" type="Node3D" unique_id=409868144]
+
+[node name="StaticCylinderobj" type="MeshInstance3D" parent="." unique_id=997774748]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2873174, 0, 0.5642915)
+material_override = SubResource("ShaderMaterial_paxxb")
+mesh = ExtResource("1_4xfga")

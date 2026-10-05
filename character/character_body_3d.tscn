@@ -1,0 +1,197 @@
+[gd_scene load_steps=5 format=3 uid="uid://r7bpf7yx4ayu"]
+
+[ext_resource type="PackedScene" uid="uid://cw6w11wlgmgeh" path="res://character/animation/playe2.glb" id="1_yf8mh"]
+
+[sub_resource type="GDScript" id="GDScript_hfe7o"]
+script/source = "extends CharacterBody3D
+
+@export_group(\"camera\")
+@export_range(0.0, 1.0) var mouse_sensitivity := 0.25
+@onready var animation_player: AnimationPlayer = $playe2/AnimationPlayer
+
+@export_group(\"Mouvement\")
+@export var move_speed := 8.0
+@export var accelerate := 20.0 
+@export var rotatio_speed = 12.0
+@export var jump_implusion = 15.0
+
+var _camera_input_direction = Vector2.ZERO
+var _last_mouvement_direction = Vector3.BACK
+var gravity = -30.0
+
+@onready var _camera_pivot:Node3D = %cameraPivot
+@onready var _camera:Camera3D = %Camera3D
+@onready var _skin = $playe2
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed(\"left_click\"):
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if event.is_action_pressed(\"ui_cancel\"):
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func _unhandled_input(event: InputEvent) -> void:
+	var is_camera_motion = (
+		event is InputEventMouseMotion and 
+		Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED 
+	)#CONDITION POUR VEIRFIE QUE LA SOURIS EST BELLE ET BIEN DANS LA FENTRE avant de tourner la camera
+	 
+	if is_camera_motion:
+		_camera_input_direction = event.screen_relative * mouse_sensitivity
+
+func _physics_process(delta: float) -> void:
+	_camera_pivot.rotation.x += _camera_input_direction.y * delta#TOURNE AUTOUR DE L'AXE X
+	_camera_pivot.rotation.x = clamp(_camera_pivot.rotation.x,-PI/6.0, PI/3.0)
+	_camera_pivot.rotation.y -= _camera_input_direction.x * delta#TOURNE AUTOUR DE L'AXE y
+	
+	_camera_input_direction = Vector2.ZERO
+	#move third person charater
+	#1-get input vector
+	var raw_input = Input.get_vector(\"move_left\",\"move_right\",\"move_up\",\"move_down\")
+	#2-extract foward and right direction vector
+	var foward = _camera.global_basis.z
+	var right = _camera.global_basis.x
+	#3-calculate move direction
+	var move_direction = foward*raw_input.y + right*raw_input.x
+	move_direction.y = 0.0
+	move_direction = move_direction.normalized()
+	#4-calculate character velocity
+	
+	var y_velocity = velocity.y 
+	velocity.y = 0.0
+	velocity = velocity.move_toward(move_direction*move_speed, accelerate*delta)
+	#le joueur tombe
+	velocity.y = y_velocity + gravity*delta	
+	#jump
+	var is_starting_jump = Input.is_action_pressed(\"jump\") and is_on_floor()
+	if is_starting_jump : 
+		velocity.y += jump_implusion
+		
+	#5-move character 
+	move_and_slide()
+	if move_direction.length() > 0.2 :
+		_last_mouvement_direction = move_direction
+	var target_angle = Vector3.BACK.signed_angle_to(_last_mouvement_direction, Vector3.UP)
+	_skin.global_rotation.y = lerp_angle(_skin.rotation.y, target_angle,rotatio_speed*delta) 
+
+	#jouez des animations
+	if is_starting_jump:
+		animation_player.play(\"jump\")
+	elif not is_on_floor() and velocity.y < 0:
+		animation_player.play(\"falling_idle\")
+	elif is_on_floor():
+		var ground_speed = velocity.length()
+		if ground_speed > 0.0:
+			animation_player.play(\"run\")
+		
+		else :
+			animation_player.play(\"idle\")
+			
+		
+"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_myh4u"]
+height = 3.6
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_yf8mh"]
+
+[node name="CharacterBody3D" type="CharacterBody3D"]
+script = SubResource("GDScript_hfe7o")
+
+[node name="playe2" parent="." instance=ExtResource("1_yf8mh")]
+
+[node name="Skeleton3D" parent="playe2/Armature" index="0"]
+bones/0/position = Vector3(-0.980546, -0.343347, -191.811)
+bones/0/rotation = Quaternion(-0.680266, -0.275956, 0.244097, 0.633643)
+bones/1/rotation = Quaternion(0.0897988, 0.00258708, -0.0198043, 0.99576)
+bones/2/rotation = Quaternion(0.25511, 0.00603188, -0.0600703, 0.965026)
+bones/3/position = Vector3(-5.24521e-06, 23.7175, -4.76837e-06)
+bones/3/rotation = Quaternion(0.25511, 0.0060319, -0.0600702, 0.965025)
+bones/4/position = Vector3(3.8147e-06, 26.6822, -1.99282e-05)
+bones/4/rotation = Quaternion(0.0531968, 0.0418657, -0.0545729, 0.996212)
+bones/5/position = Vector3(-1.90735e-06, 22.0191, 6.49349)
+bones/5/rotation = Quaternion(0.0192676, 0.0636445, 0.014716, 0.997678)
+bones/6/rotation = Quaternion(-0.528416, -0.419397, 0.590727, -0.442635)
+bones/7/position = Vector3(-1.72097e-05, 27.2862, 8.70686e-05)
+bones/7/rotation = Quaternion(-0.164847, -0.215156, -0.0398797, 0.96174)
+bones/8/position = Vector3(2.28944e-07, 57.0845, -0.000105204)
+bones/8/rotation = Quaternion(0.067213, -0.0871708, 0.159123, 0.981103)
+bones/9/position = Vector3(-7.55283e-06, 41.34, 4.7148e-07)
+bones/9/rotation = Quaternion(-0.30174, -0.0401396, 0.228588, 0.92471)
+bones/10/position = Vector3(-4.03617, 6.97908, 2.17593)
+bones/10/rotation = Quaternion(0.276964, 0.121384, 0.0827362, 0.949585)
+bones/11/position = Vector3(0.0702503, 6.68008, -1.65076e-05)
+bones/11/rotation = Quaternion(0.0110756, -0.0018273, 0.0098802, 0.999888)
+bones/12/position = Vector3(-0.176937, 6.82935, 7.87881e-06)
+bones/12/rotation = Quaternion(0.00803782, -0.00144731, 0.030983, 0.999487)
+bones/13/position = Vector3(-3.91336, 23.2048, 0.164772)
+bones/13/rotation = Quaternion(0.0421066, -0.0138882, -0.0238969, 0.998731)
+bones/14/position = Vector3(0.0758629, 5.19623, -1.79887e-05)
+bones/14/rotation = Quaternion(0.14231, -0.000935679, -0.0236297, 0.98954)
+bones/15/position = Vector3(-0.0375004, 5.25442, 8.58051e-06)
+bones/15/rotation = Quaternion(2.69175e-07, -9.25976e-05, -0.00042317, 1)
+bones/16/position = Vector3(3.9133, 21.7273, -0.10064)
+bones/16/rotation = Quaternion(0.130336, -0.00250643, -0.171186, 0.976576)
+bones/17/position = Vector3(0.0757961, 4.84282, -4.04833e-05)
+bones/17/rotation = Quaternion(0.190008, -0.00152486, -0.0046049, 0.981771)
+bones/18/position = Vector3(-0.0627289, 5.29594, -2.59938e-06)
+bones/18/rotation = Quaternion(7.91766e-06, 0.000174476, 0.00356786, 0.999994)
+bones/19/position = Vector3(-12.1864, 20.3986, -0.480431)
+bones/19/rotation = Quaternion(0.461078, -0.458133, 0.640422, 0.409121)
+bones/20/position = Vector3(2.20799e-05, 27.2862, -1.75154e-05)
+bones/20/rotation = Quaternion(-0.124563, 0.182873, 0.0891992, 0.971126)
+bones/21/position = Vector3(1.69063e-05, 57.0841, 2.15539e-05)
+bones/21/rotation = Quaternion(0.0199252, 0.0320864, -0.239103, 0.970259)
+bones/22/position = Vector3(-1.64647e-05, 41.374, 1.83574e-06)
+bones/22/rotation = Quaternion(-0.300821, -0.0197948, -0.153452, 0.941046)
+bones/23/position = Vector3(4.1182, 6.97443, 2.2891)
+bones/23/rotation = Quaternion(0.192164, 0.00100497, -0.102361, 0.976009)
+bones/24/position = Vector3(0.113898, 6.73244, -3.83722e-05)
+bones/24/rotation = Quaternion(0.0124818, 0.0045037, 0.171587, 0.98508)
+bones/25/position = Vector3(0.21632, 6.79982, 1.44306e-05)
+bones/25/rotation = Quaternion(0.00605821, -0.000646581, -0.0473205, 0.998861)
+bones/26/position = Vector3(3.7715, 24.2006, 0.106763)
+bones/26/rotation = Quaternion(0.0274592, 0.0154783, 0.0992547, 0.994563)
+bones/27/position = Vector3(-0.0555172, 5.23744, -2.02064e-05)
+bones/27/rotation = Quaternion(0.146564, 8.22041e-05, 0.0298764, 0.98875)
+bones/28/position = Vector3(0.0737915, 4.67285, -2.32556e-05)
+bones/28/rotation = Quaternion(0.000246616, -0.000256243, -0.0102861, 0.999947)
+bones/29/position = Vector3(-3.7716, 21.6935, -0.207375)
+bones/29/rotation = Quaternion(0.0983432, 0.017595, 0.116526, 0.98815)
+bones/30/position = Vector3(-0.0502033, 5.11701, -3.61453e-05)
+bones/30/rotation = Quaternion(0.264052, 0.000831416, 0.00616712, 0.964488)
+bones/31/position = Vector3(0.0830574, 5.18863, 2.34523e-06)
+bones/31/rotation = Quaternion(-2.63312e-05, -0.00020095, -0.0141597, 0.9999)
+bones/32/position = Vector3(19.5674, -9.83705, -0.885942)
+bones/32/rotation = Quaternion(0.139838, 0.564775, 0.808075, -0.0921413)
+bones/33/position = Vector3(-9.04561e-07, 89.6846, -1.05489e-05)
+bones/33/rotation = Quaternion(-0.877677, -0.00581215, 0.0095767, 0.479122)
+bones/34/position = Vector3(2.72267e-06, 90.6794, -1.03643e-05)
+bones/34/rotation = Quaternion(0.548095, -0.00814543, -0.0845362, 0.832093)
+bones/35/rotation = Quaternion(0.260048, -0.117218, 0.0300832, 0.957982)
+bones/36/position = Vector3(-19.5674, -9.83701, -0.371434)
+bones/36/rotation = Quaternion(-0.176144, 0.543251, 0.812988, 0.113586)
+bones/37/rotation = Quaternion(-0.914208, -0.0443805, 0.114166, 0.38629)
+bones/38/rotation = Quaternion(0.345886, 0.0323758, 0.130804, 0.92855)
+bones/39/rotation = Quaternion(0.224015, 0.118881, -0.0308623, 0.966815)
+
+[node name="AnimationPlayer" parent="playe2" index="1"]
+autoplay = "run"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+shape = SubResource("CapsuleShape3D_myh4u")
+
+[node name="cameraPivot" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 0.939693, -0.34202, 0, 0.34202, 0.939693, -0.1, 3.4, 0.2)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="cameraPivot"]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 0, 0)
+shape = SubResource("SphereShape3D_yf8mh")
+spring_length = 8.0
+
+[node name="Camera3D" type="Camera3D" parent="cameraPivot/SpringArm3D"]
+unique_name_in_owner = true
+transform = Transform3D(1, 1.77636e-15, -4.9738e-14, 1.77636e-15, 1, -2.98023e-08, 0, 0, 1, -7.45058e-09, 0.0342021, -0.0939692)
+
+[editable path="playe2"]
